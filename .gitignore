@@ -1,5 +1,4 @@
-.env
 .venv
 *.ppn
 *.pv
-user_background.txt
+config.toml
