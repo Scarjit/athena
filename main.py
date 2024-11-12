@@ -106,7 +106,7 @@ def get_answer(question):
     user_background = get_user_background()
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model=config['chat']['model'],
             messages=[
                 {
                     "role": "system",

@@ -27,6 +27,9 @@ Remember to format your output in a way that is easy for a TTS engine to read.
 model = "tts-1"
 voice = "nova"
 
+[chat]
+model = "gpt-4o"
+
 [transcription]
 language = "en"
 
