@@ -1,4 +1,6 @@
+import collections
 import os
+import sys
 from datetime import datetime
 import toml
 import openai
@@ -8,6 +10,7 @@ import numpy as np
 import pvporcupine
 import io
 import scipy.io.wavfile as wavfile
+import webrtcvad
 from openai import OpenAI
 import chime
 
@@ -74,14 +77,54 @@ def detect_wake_word(porcupine_engines, sample_rate, frames_per_buffer):
                     print(f"Detected wake word using engine {i}!")
                     return
 
-def record_question(sample_rate):
-    print("Recording question...")
-    duration = 5  # seconds
-    recording = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype='int16')
-    sd.wait()
+def record_question(sample_rate, vad_mode=1, frame_duration=30, padding_duration=300):
+    """
+    Records audio from the microphone until silence is detected.
+
+    :param sample_rate: Sampling rate of the audio.
+    :param vad_mode: Aggressiveness of the VAD (0-3).
+    :param frame_duration: Duration of each frame in ms.
+    :param padding_duration: Duration to wait before ending after silence is detected in ms.
+    :return: Recorded audio as a NumPy array.
+    """
+    vad = webrtcvad.Vad(vad_mode)
+    frame_size = int(sample_rate * frame_duration / 1000)  # Number of samples per frame
+    padding_frames = int(padding_duration / frame_duration)
+    ring_buffer = collections.deque(maxlen=padding_frames)
+    triggered = False
+    frames = []
+
+    def callback(indata, frames_, time_, status):
+        nonlocal triggered
+        if status:
+            print(status, file=sys.stderr)
+        # Convert to mono and 16-bit PCM
+        pcm = indata[:, 0].astype(np.int16).tobytes()
+        is_speech = vad.is_speech(pcm, sample_rate)
+        if is_speech:
+            triggered = True
+            frames.append(indata.copy())
+            ring_buffer.clear()
+        elif triggered:
+            ring_buffer.append(indata.copy())
+            frames.append(indata.copy())
+            if len(ring_buffer) >= ring_buffer.maxlen:
+                triggered = False
+
+    with sd.InputStream(samplerate=sample_rate, channels=1, dtype='int16',
+                        blocksize=frame_size, callback=callback):
+        print("Recording... Speak now.")
+        while True:
+            sd.sleep(100)  # Sleep in short intervals to allow callback processing
+            if not triggered and len(ring_buffer) == ring_buffer.maxlen:
+                break
+
     print("Recording complete.")
     chime.success()
-    return recording.flatten()
+
+    # Concatenate all recorded frames
+    audio = np.concatenate(frames, axis=0).flatten()
+    return audio
 
 def transcribe_audio(audio_data, sample_rate):
     print("Transcribing audio...")

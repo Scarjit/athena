@@ -11,7 +11,9 @@ dependencies = [
     "pvporcupine>=3.0.3",
     "python-dotenv>=1.0.1",
     "scipy>=1.14.1",
+    "setuptools>=75.4.0",
     "sounddevice>=0.5.1",
     "soundfile>=0.12.1",
     "toml>=0.10.2",
+    "webrtcvad>=2.0.10",
 ]
