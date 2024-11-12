@@ -1,7 +1,7 @@
 [project]
 name = "athena"
 version = "0.1.0"
-description = "Add your description here"
+description = "Athena is a simple OpenAI based voice assistant."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
