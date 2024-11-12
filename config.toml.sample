@@ -1,0 +1,36 @@
+# config.toml
+
+[credentials]
+picovoice_key = "YOUR_PICOVOICE_KEY"
+openai_key = "YOUR_OPENAI_KEY"
+
+[settings]
+sample_rate = 16000
+frames_per_buffer = 512
+
+[user]
+background = """
+The user has not specified any background information.
+Just a regular person asking questions.
+"""
+
+[system]
+prompt = """
+You are Athena, a virtual assistant that helps with answering questions.
+Your goal is to provide accurate, short answers to the user's questions.
+Try to incorporate the user's background information into your responses, if relevant.
+No matter the language of the question, you should always respond in English.
+Remember to format your output in a way that is easy for a TTS engine to read.
+"""
+
+[voice]
+model = "tts-1"
+voice = "nova"
+
+[transcription]
+language = "en"
+
+[porcupine]
+ppn_file_de = "./ppn/athena_de_linux_v3_0_0.ppn"
+ppn_file_en = "./ppn/athena_en_linux_v3_0_0.ppn"
+pv_file_de = "./ppn/porcupine_params_de.pv"
