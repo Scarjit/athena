@@ -148,7 +148,7 @@ def transcribe_audio(audio_data, sample_rate):
         print(f"Error during transcription: {e}")
         return ""
 
-def get_answer(question, cb_data=None, call_id=None, am=None):
+def get_answer(question, cb_datas=None, am=None):
     system_prompt = get_system_prompt()
     user_background = get_user_background()
     messages = [
@@ -166,14 +166,10 @@ Here is some background about the user:
             "content": question
         }
     ]
-    if cb_data:
+    if cb_datas and am:
         messages.append(am)
-        cb = {
-            "role": "tool",
-            "content": json.dumps(cb_data),
-            "tool_call_id": call_id
-        }
-        messages.append(cb)
+        for cb_data in cb_datas:
+            messages.append(cb_data)
 
     try:
         for message in messages:
@@ -189,20 +185,29 @@ Here is some background about the user:
         print(f"Assistant message: {assistant_message}")
         # Check if the assistant wants to call a function
         if getattr(assistant_message, 'tool_calls', None):
-            tool_call = assistant_message.tool_calls[0]
-            func = tool_call.function
-            args = json.loads(func.arguments)
-            name = func.name
-            call_id = tool_call.id
+            callback_datas = []
+            for tool_call in assistant_message.tool_calls:
+                tool_call = assistant_message.tool_calls[0]
+                func = tool_call.function
+                args = json.loads(func.arguments)
+                name = func.name
+                call_id = tool_call.id
 
-            callback_data = None
-            if name == "get_weather":
-                # Call the get_weather function
-                location = args['location']
-                callback_data = get_weather(location)
+                callback_data = None
+                if name == "get_weather":
+                    # Call the get_weather function
+                    location = args['location']
+                    callback_data = get_weather(location)
+
+                if callback_data:
+                    callback_datas.append({
+                        "role": "tool",
+                        "content": json.dumps(callback_data),
+                        "tool_call_id": call_id
+                    })
 
             # Call the same function again, but provide the callback data
-            return get_answer(question, cb_data=callback_data, call_id=call_id, am=assistant_message)
+            return get_answer(question, cb_datas=callback_datas, am=assistant_message)
         else:
             # No function call, return the assistant's response
             return assistant_message.content
