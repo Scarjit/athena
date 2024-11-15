@@ -156,6 +156,7 @@ def get_answer(question, cb_datas=None, am=None):
             "role": "system",
             "content": f"""
 {system_prompt}
+Today is {datetime.now().strftime("%A, %B %d, %Y")}.
 
 Here is some background about the user: 
 {user_background}
