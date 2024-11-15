@@ -15,7 +15,7 @@ check_ppn:
 prepare: check_dependencies prepare_config check_ppn
 	@# Create virtual environment (if not exists)
 	@if [ ! -d ".venv" ]; then uv venv && echo "Virtual environment created"; else echo "Virtual environment already exists"; fi && \
-	source .venv/bin/activate && \
+        . .venv/bin/activate && \
 	uv sync && \
 	echo "Dependencies installed"
 

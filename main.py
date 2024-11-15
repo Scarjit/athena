@@ -14,6 +14,8 @@ import webrtcvad
 from openai import OpenAI
 import chime
 
+from functions import get_weather_func_def
+
 # Global configuration dictionary
 config = {}
 
@@ -165,7 +167,8 @@ Here is some background about the user:
                     "role": "user",
                     "content": question
                 }
-            ]
+            ],
+            tools=[get_weather_func_def()]
         )
         return response.choices[0].message.content
     except Exception as e:
