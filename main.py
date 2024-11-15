@@ -1,4 +1,5 @@
 import collections
+import json
 import os
 import sys
 from datetime import datetime
@@ -14,7 +15,7 @@ import webrtcvad
 from openai import OpenAI
 import chime
 
-from functions import get_weather_func_def
+from functions import get_weather_func_def, get_weather
 
 # Global configuration dictionary
 config = {}
@@ -147,33 +148,68 @@ def transcribe_audio(audio_data, sample_rate):
         print(f"Error during transcription: {e}")
         return ""
 
-def get_answer(question):
+def get_answer(question, cb_data=None, call_id=None, am=None):
     system_prompt = get_system_prompt()
     user_background = get_user_background()
-    try:
-        response = client.chat.completions.create(
-            model=config['chat']['model'],
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"""
+    messages = [
+        {
+            "role": "system",
+            "content": f"""
 {system_prompt}
 
 Here is some background about the user: 
 {user_background}
-                    """
-                },
-                {
-                    "role": "user",
-                    "content": question
-                }
-            ],
+                """
+        },
+        {
+            "role": "user",
+            "content": question
+        }
+    ]
+    if cb_data:
+        messages.append(am)
+        cb = {
+            "role": "tool",
+            "content": json.dumps(cb_data),
+            "tool_call_id": call_id
+        }
+        messages.append(cb)
+
+    try:
+        for message in messages:
+            print(message)
+
+        response = client.chat.completions.create(
+            model=config['chat']['model'],
+            messages=messages,
             tools=[get_weather_func_def()]
         )
-        return response.choices[0].message.content
+        assistant_message = response.choices[0].message
+
+        print(f"Assistant message: {assistant_message}")
+        # Check if the assistant wants to call a function
+        if getattr(assistant_message, 'tool_calls', None):
+            tool_call = assistant_message.tool_calls[0]
+            func = tool_call.function
+            args = json.loads(func.arguments)
+            name = func.name
+            call_id = tool_call.id
+
+            callback_data = None
+            if name == "get_weather":
+                # Call the get_weather function
+                location = args['location']
+                callback_data = get_weather(location)
+
+            # Call the same function again, but provide the callback data
+            return get_answer(question, cb_data=callback_data, call_id=call_id, am=assistant_message)
+        else:
+            # No function call, return the assistant's response
+            return assistant_message.content
     except Exception as e:
         print(f"Error during getting answer: {e}")
         return "I'm sorry, I couldn't process your request."
+
 
 def synthesize_audio(text):
     voice_config = config['voice']
