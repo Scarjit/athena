@@ -114,6 +114,7 @@ def record_question(sample_rate, vad_mode=1, frame_duration=30, padding_duration
     with sd.InputStream(samplerate=sample_rate, channels=1, dtype='int16',
                         blocksize=frame_size, callback=callback):
         print("Recording... Speak now.")
+        sd.sleep(1000)  # Wait a bit to allow the user to start speaking
         while True:
             sd.sleep(100)  # Sleep in short intervals to allow callback processing
             if not triggered and len(ring_buffer) == ring_buffer.maxlen:
