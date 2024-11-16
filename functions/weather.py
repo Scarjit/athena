@@ -18,7 +18,7 @@ def get_weather_func_def():
                 "properties": {
                     "location": {
                         "type": "string",
-                        "description": "The location to get the weather information for. (For example: 'Cologne'",
+                        "description": "The location to get the weather information for. (For example: 'Cologne')",
                     },
                 },
                 "required": ["location"],

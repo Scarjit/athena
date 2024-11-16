@@ -192,7 +192,6 @@ Here is some background about the user:
         if getattr(assistant_message, 'tool_calls', None):
             callback_datas = []
             for tool_call in assistant_message.tool_calls:
-                tool_call = assistant_message.tool_calls[0]
                 func = tool_call.function
                 args = json.loads(func.arguments)
                 name = func.name
