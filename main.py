@@ -15,7 +15,8 @@ import webrtcvad
 from openai import OpenAI
 import chime
 
-from functions import get_weather_func_def, get_weather
+from functions.google_calendar import get_calendar_events, get_calendar_events_func_def, authenticate_google_api
+from functions.weather import get_weather_func_def, get_weather
 
 # Global configuration dictionary
 config = {}
@@ -179,7 +180,10 @@ Here is some background about the user:
         response = client.chat.completions.create(
             model=config['chat']['model'],
             messages=messages,
-            tools=[get_weather_func_def()]
+            tools=[
+                get_weather_func_def(),
+                get_calendar_events_func_def()
+            ]
         )
         assistant_message = response.choices[0].message
 
@@ -199,6 +203,9 @@ Here is some background about the user:
                     # Call the get_weather function
                     location = args['location']
                     callback_data = get_weather(location)
+                elif name == "get_calendar_events":
+                    date = args['date']
+                    callback_data = get_calendar_events(date)
 
                 if callback_data:
                     callback_datas.append({
@@ -250,6 +257,7 @@ def main():
     load_config()
     init_openai()
     porcupine_engines, sample_rate, frames_per_buffer = init_porcupine()
+    authenticate_google_api()
 
     try:
         while True:

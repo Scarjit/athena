@@ -2,3 +2,5 @@
 *.ppn
 *.pv
 config.toml
+*.token.json
+*.secret.json
