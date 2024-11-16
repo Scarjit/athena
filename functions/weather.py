@@ -1,6 +1,5 @@
 import requests
 
-
 def get_weather(location):
     # wttr.in is a weather service that provides weather information in a text format
     url = f"https://wttr.in/{location}?M&format=j1"
